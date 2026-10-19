@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión: de 220 V al ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e27; --card:rgba(255,255,255,.05); --bd:rgba(255,255,255,.13);
+  --tx:#e6ebff; --mut:#9aa6d6; --g:#00ff88; --c:#00d9ff; --y:#ffd166; --r:#ff6b81;
+  --code:#0d1333; --shadow:0 8px 30px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f4f7fb; --card:#ffffff; --bd:#d5deec; --tx:#14213d; --mut:#51607f;
+  --g:#00875a; --c:#0077a8; --y:#a86b00; --r:#c0293f; --code:#eef3fa; --shadow:0 6px 20px rgba(20,33,61,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:17px;line-height:1.6;
+  background-image:radial-gradient(circle at 10% 0%,rgba(0,255,136,.08),transparent 45%),radial-gradient(circle at 92% 25%,rgba(0,217,255,.07),transparent 40%);
+  background-attachment:fixed}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 70px}
+code{font-family:'JetBrains Mono',ui-monospace,monospace;background:var(--code);padding:1px 7px;border-radius:6px;font-size:.9em;color:var(--c)}
+#prog{position:fixed;top:0;left:0;height:4px;width:0;background:linear-gradient(90deg,var(--g),var(--c));z-index:50}
+
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--bd)}
+.top-in{max-width:980px;margin:0 auto;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--mut)}
+.brand b{color:var(--g)}
+.btn{font-family:'JetBrains Mono',monospace;font-size:.85rem;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:10px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--c)}
+.tools{display:flex;gap:8px}
+
+.hero{padding:44px 0 10px}
+.tag{font-family:'JetBrains Mono',monospace;color:var(--c);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase}
+h1{font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(1.7rem,4.3vw,2.8rem);line-height:1.18;margin:8px 0 14px}
+h1 span{background:linear-gradient(90deg,var(--g),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--mut);font-size:1.1rem;max-width:760px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.pill{font-family:'JetBrains Mono',monospace;font-size:.78rem;border:1px solid var(--bd);border-radius:999px;padding:5px 12px;color:var(--mut)}
+
+h2{font-family:'Orbitron',sans-serif;font-size:1.3rem;margin:44px 0 6px}
+.sub{font-family:'JetBrains Mono',monospace;color:var(--mut);font-size:.82rem;margin-bottom:16px}
+.sub::before{content:"// ";color:var(--g)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.card + .card{margin-top:16px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+/* situacion */
+.idea{border-left:4px solid var(--g);padding:14px 18px;background:var(--code);border-radius:0 12px 12px 0;margin-top:14px}
+.scale{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-top:16px}
+.node{flex:1 1 160px;background:var(--code);border:1px solid var(--bd);border-radius:12px;padding:12px;text-align:center;font-size:.9rem}
+.node b{display:block;font-family:'JetBrains Mono',monospace;color:var(--g);font-size:1.05rem}
+.node.bad b{color:var(--r)}
+.node small{color:var(--mut)}
+
+/* misiones */
+.mis{border-top:4px solid var(--c)}
+.mis.m1{border-top-color:var(--g)} .mis.m2{border-top-color:var(--c)} .mis.m3{border-top-color:var(--y)} .mis.m4{border-top-color:var(--r)} .mis.m5{border-top-color:#b794f4}
+.mis-head{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.mnum{font-family:'Orbitron',sans-serif;font-weight:800;font-size:.8rem;color:var(--mut);letter-spacing:.1em}
+.mis h3{font-family:'Orbitron',sans-serif;font-size:1.15rem;margin:2px 0 6px}
+.madre{font-size:1.1rem;font-weight:600;margin:8px 0 12px}
+.quien{display:flex;gap:8px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--mut)}
+.quien input{font:inherit;color:var(--tx);background:var(--code);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;width:190px}
+ul.guia{margin:6px 0 12px 20px;color:var(--mut)}
+ul.guia li{margin:4px 0}
+.mini{background:var(--code);border:1px dashed var(--bd);border-radius:12px;padding:14px 16px;margin:14px 0}
+.mini h4{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--y);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.fuentes{font-size:.9rem;color:var(--mut)}
+.fuentes b{color:var(--c)}
+
+.niv{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.niv label{display:flex;gap:8px;align-items:center;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:.92rem;background:var(--card)}
+.niv input{accent-color:var(--g);width:18px;height:18px}
+.niv label:has(input:checked){border-color:var(--g);color:var(--g)}
+
+/* codigo */
+.codebox{position:relative;margin:12px 0}
+pre{background:var(--code);border:1px solid var(--bd);border-radius:12px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.88rem;line-height:1.55}
+.copy{position:absolute;top:8px;right:8px;font-size:.75rem;padding:4px 10px}
+
+/* seguridad */
+.safe{border-color:var(--r);background:linear-gradient(135deg,rgba(255,107,129,.1),transparent)}
+.safe h3{color:var(--r);font-family:'Orbitron',sans-serif;font-size:1.05rem;margin-bottom:6px}
+
+/* entregable */
+.dliv{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.dliv .it{background:var(--code);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.dliv .it b{color:var(--g)}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.chain .st{background:var(--code);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:.82rem}
+.chain .ar{color:var(--g);font-weight:700}
+
+/* progreso */
+.progbox{position:sticky;bottom:12px;margin-top:30px;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:14px;padding:12px 16px;display:flex;gap:14px;align-items:center;z-index:15}
+.bar{flex:1;height:10px;background:var(--code);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--c));transition:width .3s}
+.pt{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--mut);white-space:nowrap}
+
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--bd);color:var(--mut);font-size:.85rem;text-align:center}
+@media print{.top,.progbox,.btn,#prog{display:none!important}body{background:#fff;color:#000}.card{box-shadow:none}}
+
+.mine{background:rgba(0,217,255,.08);border-left:4px solid var(--c);border-radius:0 10px 10px 0;padding:10px 14px;margin:12px 0;font-size:.95rem}
+.mylist{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:.85rem}
+.mylist input{font:inherit;width:90px;color:var(--tx);background:var(--code);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+.mylist .note{color:var(--mut);font-size:.8rem}
+.docente{display:none}
+body.dm .docente{display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--y);border-top:1px dashed var(--y);padding-top:6px}
+@media print{.docente{display:none!important}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<div class="top">
+  <div class="top-in">
+    <div class="brand"><b>Esc. Industrial N°9</b> · Sistemas Embebidos · 6° 1° · 2026</div>
+    <div class="tools">
+      <button class="btn" id="themeBtn">☾ / ☀</button>
+      <button class="btn" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="tag">Misión de investigación · Analizador de Red Eléctrica</div>
+  <h1>De <span>220 V</span> al ESP32: ¿cómo se mide la red sin quemar nada?</h1>
+  <p class="lead">En clase simularon las lecturas con <code>input()</code>. Hoy investigan cómo hace el hardware real para <b>conseguir</b> esos cuatro números. Cada integrante del grupo se hace cargo de una misión distinta. <b>Acá se piensa con la propia cabeza: la ficha va a mano, con tus palabras, y el miércoles la defendés sin mirarla.</b></p>
+  <div class="pills">
+    <span class="pill">Investigación</span><span class="pill">Trabajo en grupo + aporte individual</span><span class="pill">Se defiende el miércoles</span>
+  </div>
+</header>
+
+<h2>La situación</h2>
+<div class="sub">el problema de fondo</div>
+<div class="card">
+  <p>El ESP32 es como un lector con una ventana chiquita: <b>solo entiende señales entre 0 V y 3,3 V</b>. Pero la red de tu casa es alterna, oscila entre <b>−311 V y +311 V</b> y, encima, es peligrosa. Si la conectás directo, adiós placa (y algo peor).</p>
+  <div class="scale">
+    <div class="node bad"><b>±311 V</b><small>lo que tiene la red (pico)</small></div>
+    <div class="node"><b>???</b><small>sensor + acondicionamiento</small></div>
+    <div class="node"><b>0 – 3,3 V</b><small>lo que tolera el ADC del ESP32</small></div>
+  </div>
+  <div class="idea">⚡ <b>Analogía:</b> es como llenar un vasito con una canilla de bombero. Hace falta una pieza intermedia que reduzca la presión, la ajuste a la medida del vaso y, además, te proteja a vos. Esa pieza es la que van a investigar.</div>
+</div>
+
+<div class="card safe" style="margin-top:16px">
+  <h3>⚠ Seguridad primero</h3>
+  <p>En el aula <b>no se conecta nunca la red de 220 V</b> a una protoboard ni a una placa. Hoy todo se hace con investigación y cálculo. Cuando se mida de verdad, se usan módulos aislados y la supervisión del docente.</p>
+</div>
+
+<h2>Cómo se trabaja</h2>
+<div class="sub">reglas de la misión</div>
+<div class="card">
+  <div class="mylist">Tu número de lista: <input type="number" id="lista" min="1" max="99" placeholder="Nº"> <span class="note" id="listaNote">Ingresalo para ver tu versión de las mini-misiones. Cada versión tiene números distintos.</span></div>
+  <ul class="guia" style="color:var(--tx)">
+    <li><b>Una misión por persona.</b> En grupos de 3 se descarta la Misión 5; en grupos de 4 se usan las cuatro primeras y la 5 es del que más se anime, o van todas.</li>
+    <li>Escribí tu nombre en la misión que elegiste (se guarda en esta compu).</li>
+    <li><b>La ficha va a mano, en una hoja, con tus palabras.</b> Nada de copiar y pegar ni de transcribir texto de la pantalla.</li>
+    <li><b>Sin IA ni chatbots.</b> Para esta misión se consultan datasheets, documentación oficial, apuntes y libros. El razonamiento tiene que ser tuyo.</li>
+    <li>Cada misión pide <b>una analogía propia</b> y <b>una duda tuya</b>. Una buena duda vale tanto como una respuesta.</li>
+    <li>Anotá <b>de dónde sacaste cada dato</b> (datasheet, documentación oficial, libro). Sin fuente, no vale.</li>
+    <li>Cada misión tiene <b>3 niveles</b>. Tildá hasta dónde llegaste.</li>
+    <li>El miércoles explicás tu pieza <b>sin mirar la hoja</b> y respondés una repregunta del profe.</li>
+  </ul>
+  <div class="idea">🧠 <b>Por qué así:</b> el objetivo no es tener la respuesta perfecta, sino entender lo suficiente como para explicarla con tus palabras y bancarte una pregunta que no esperabas. Eso es lo que hace un técnico en una planta.</div>
+  <p class="fuentes" style="margin-top:12px"><b>Dónde buscar:</b> documentación oficial de Espressif (ADC del ESP32), datasheets de los sensores (ZMPT101B, SCT-013, ACS712), la guía de medición de OpenEnergyMonitor y la documentación de arduinoFFT / ESP-DSP.</p>
+</div>
+
+<h2>Las 5 misiones</h2>
+<div class="sub">elegí una y dale</div>
+
+<!-- Misión 1 -->
+<section class="card mis m1" data-m="1">
+  <div class="mis-head">
+    <div><div class="mnum">MISIÓN 1</div><h3>El ADC del ESP32</h3></div>
+    <div class="quien">Responsable: <input type="text" data-name="1" placeholder="tu nombre"></div>
+  </div>
+  <div class="madre">¿Cómo convierte el ESP32 una tensión en un número?</div>
+  <ul class="guia">
+    <li>¿Qué resolución tiene el ADC y cuántos niveles distintos puede distinguir?</li>
+    <li>¿Qué rango de tensión acepta? ¿Qué es la <b>atenuación</b>?</li>
+    <li>¿Qué significa que el ADC del ESP32 es <b>no lineal</b>?</li>
+    <li>¿Por qué el ADC2 no se puede usar cuando el WiFi está activo?</li>
+  </ul>
+  <div class="mini"><h4>Mini-misión</h4><span data-v="1">Ingresá tu número de lista arriba para ver tu versión.</span><div class="docente" data-d="1"></div></div>
+  <div class="mine">✍️ <b>Con tus palabras (en tu hoja):</b> inventá una analogía propia, que no sea la de la canilla de bombero, y anotá una duda que te quedó.</div>
+  <div class="niv">
+    <label><input type="checkbox" data-n="1a"> ✅ Mínimo: respondí las preguntas con mis palabras</label>
+    <label><input type="checkbox" data-n="1b"> ⭐ Completo: resolví la mini-misión</label>
+    <label><input type="checkbox" data-n="1c"> 🚀 Bonus: cuál de los pines de la placa usarías y por qué</label>
+  </div>
+</section>
+
+<!-- Misión 2 -->
+<section class="card mis m2" data-m="2">
+  <div class="mis-head">
+    <div><div class="mnum">MISIÓN 2</div><h3>Medir la tensión de red</h3></div>
+    <div class="quien">Responsable: <input type="text" data-name="2" placeholder="tu nombre"></div>
+  </div>
+  <div class="madre">¿Cómo se baja una onda de ±311 V a algo que el ADC pueda leer?</div>
+  <ul class="guia">
+    <li>¿Qué hace un módulo sensor de tensión (tipo ZMPT101B)? ¿Qué componente aísla la red de la placa?</li>
+    <li>¿Por qué una señal alterna <b>no puede</b> entrar directo al ADC aunque esté en el rango de 3,3 V?</li>
+    <li>¿Qué es el <b>offset</b> (bias) y por qué se centra la señal en la mitad del rango?</li>
+  </ul>
+  <div class="mini"><h4>Mini-misión</h4><span data-v="2">Ingresá tu número de lista arriba para ver tu versión.</span><div class="docente" data-d="2"></div></div>
+  <div class="mine">✍️ <b>Con tus palabras (en tu hoja):</b> inventá una analogía propia, que no sea la de la canilla de bombero, y anotá una duda que te quedó.</div>
+  <div class="niv">
+    <label><input type="checkbox" data-n="2a"> ✅ Mínimo: respondí las preguntas con mis palabras</label>
+    <label><input type="checkbox" data-n="2b"> ⭐ Completo: resolví la mini-misión con dibujo</label>
+    <label><input type="checkbox" data-n="2c"> 🚀 Bonus: qué pasaría si la onda se pasara del rango del ADC</label>
+  </div>
+</section>
+
+<!-- Misión 3 -->
+<section class="card mis m3" data-m="3">
+  <div class="mis-head">
+    <div><div class="mnum">MISIÓN 3</div><h3>Medir la corriente</h3></div>
+    <div class="quien">Responsable: <input type="text" data-name="3" placeholder="tu nombre"></div>
+  </div>
+  <div class="madre">¿Cómo se mide cuánta corriente consume una carga sin cortar el cable?</div>
+  <ul class="guia">
+    <li>¿Cómo funciona un sensor de corriente tipo pinza (SCT-013)? ¿Y uno tipo ACS712? ¿En qué se diferencian?</li>
+    <li>¿Para qué sirve la <b>resistencia de carga</b> (burden)?</li>
+    <li>¿Por qué un sensor de pinza también necesita offset?</li>
+  </ul>
+  <div class="mini"><h4>Mini-misión</h4><span data-v="3">Ingresá tu número de lista arriba para ver tu versión.</span><div class="docente" data-d="3"></div></div>
+  <div class="mine">✍️ <b>Con tus palabras (en tu hoja):</b> inventá una analogía propia, que no sea la de la canilla de bombero, y anotá una duda que te quedó.</div>
+  <div class="niv">
+    <label><input type="checkbox" data-n="3a"> ✅ Mínimo: respondí las preguntas con mis palabras</label>
+    <label><input type="checkbox" data-n="3b"> ⭐ Completo: resolví la mini-misión</label>
+    <label><input type="checkbox" data-n="3c"> 🚀 Bonus: elegí un valor comercial de resistencia y explicá qué pasa</label>
+  </div>
+</section>
+
+<!-- Misión 4 -->
+<section class="card mis m4" data-m="4">
+  <div class="mis-head">
+    <div><div class="mnum">MISIÓN 4</div><h3>Muestreo y cálculo de Vrms</h3></div>
+    <div class="quien">Responsable: <input type="text" data-name="4" placeholder="tu nombre"></div>
+  </div>
+  <div class="madre">¿Cuántas muestras hacen falta y cómo se obtiene el valor eficaz?</div>
+  <ul class="guia">
+    <li>La red es de 50 Hz: ¿cuánto dura un ciclo?</li>
+    <li>Si muestreás a 2000 muestras por segundo, ¿cuántas muestras tenés por ciclo?</li>
+    <li>¿Qué dice el teorema de Nyquist y por qué importa acá?</li>
+    <li>¿Cómo se calcula el Vrms con muestras? (raíz de la media de los cuadrados)</li>
+  </ul>
+  <div class="mini"><h4>Mini-misión (en Python)</h4>
+    <span data-v="4">Ingresá tu número de lista arriba para ver tu versión.</span><div class="docente" data-d="4"></div>
+    <div class="codebox">
+      <button class="btn copy" data-copy="rms">Copiar</button>
+<pre id="rms"># Ingresá tu número de lista arriba para ver tu versión.</pre>
+    </div>
+  </div>
+  <div class="mine">✍️ <b>Con tus palabras (en tu hoja):</b> inventá una analogía propia, que no sea la de la canilla de bombero, y anotá una duda que te quedó.</div>
+  <div class="niv">
+    <label><input type="checkbox" data-n="4a"> ✅ Mínimo: respondí las preguntas con mis palabras</label>
+    <label><input type="checkbox" data-n="4b"> ⭐ Completo: la función <code>rms()</code> funciona</label>
+    <label><input type="checkbox" data-n="4c"> 🚀 Bonus: conectá <code>rms()</code> con <code>SensorVrms</code> del analizador</label>
+  </div>
+</section>
+
+<!-- Misión 5 -->
+<section class="card mis m5" data-m="5">
+  <div class="mis-head">
+    <div><div class="mnum">MISIÓN 5</div><h3>THD y FFT</h3></div>
+    <div class="quien">Responsable: <input type="text" data-name="5" placeholder="tu nombre"></div>
+  </div>
+  <div class="madre">¿Cómo se mide la "suciedad" de la onda?</div>
+  <ul class="guia">
+    <li>¿Qué son los <b>armónicos</b> y en qué frecuencias aparecen en una red de 50 Hz?</li>
+    <li>¿Qué hace una FFT con una señal?</li>
+    <li>¿Cómo se calcula el THD a partir de la fundamental y los armónicos?</li>
+    <li>¿Qué librerías de FFT existen para ESP32?</li>
+  </ul>
+  <div class="mini"><h4>Mini-misión</h4><span data-v="5">Ingresá tu número de lista arriba para ver tu versión.</span><div class="docente" data-d="5"></div></div>
+  <div class="mine">✍️ <b>Con tus palabras (en tu hoja):</b> inventá una analogía propia, que no sea la de la canilla de bombero, y anotá una duda que te quedó.</div>
+  <div class="niv">
+    <label><input type="checkbox" data-n="5a"> ✅ Mínimo: respondí las preguntas con mis palabras</label>
+    <label><input type="checkbox" data-n="5b"> ⭐ Completo: resolví la mini-misión</label>
+    <label><input type="checkbox" data-n="5c"> 🚀 Bonus: elegí una librería y explicá cómo se usaría</label>
+  </div>
+</section>
+
+<h2>Misión común: seguridad</h2>
+<div class="sub">la contesta cada integrante, 3 renglones</div>
+<div class="card safe">
+  <h3>¿Por qué se aísla la placa de la red de 220 V?</h3>
+  <p>Escribí qué puede pasar si no hay aislación (para las personas y para el equipo) y qué componente o módulo se usa para aislar.</p>
+</div>
+
+<h2>Qué entregan el miércoles</h2>
+<div class="sub">tres cosas</div>
+<div class="dliv">
+  <div class="it"><b>1 · Diagrama del grupo</b><br>La cadena completa, dibujada en hoja o pizarrón, con cada bloque nombrado.
+    <div class="chain"><span class="st">Red 220 V</span><span class="ar">→</span><span class="st">Sensores V / I</span><span class="ar">→</span><span class="st">Offset y burden</span><span class="ar">→</span><span class="st">ADC ESP32</span><span class="ar">→</span><span class="st">Cálculo</span><span class="ar">→</span><span class="st">MQTT</span></div>
+  </div>
+  <div class="it"><b>2 · Ficha individual</b><br>Media hoja <b>escrita a mano</b>: respuestas con tus palabras, tu analogía, tu duda, la mini-misión resuelta y tus fuentes.</div>
+  <div class="it"><b>3 · Un minuto cada uno</b><br>Explicás tu pieza de la cadena <b>sin mirar la hoja</b>, decís <b>qué parte de tu código del analizador reemplaza</b> y respondés <b>una repregunta</b> del profe.</div>
+</div>
+
+<div class="progbox">
+  <div class="pt" id="ptxt">0 / 15 niveles</div>
+  <div class="bar"><i id="pbar"></i></div>
+</div>
+
+<footer>Sistemas Embebidos · 6° 1° · Escuela Industrial N°9 "15 de Noviembre" · El Calafate<br>Prof. Pablo Limardo · Departamento ACPI · Ciclo 2026</footer>
+</div>
+
+<script>
+/* ---------- tema ---------- */
+try{var th=localStorage.getItem('mision-tema'); if(th) document.documentElement.setAttribute('data-theme',th);}catch(e){}
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var nx=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',nx);
+  try{localStorage.setItem('mision-tema',nx);}catch(e){}
+});
+
+/* ---------- barra de scroll ---------- */
+window.addEventListener('scroll',function(){
+  var h=document.documentElement; var p=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
+  document.getElementById('prog').style.width=Math.min(100,p)+'%';
+});
+
+/* ---------- copiar codigo ---------- */
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click',function(){
+    var txt=document.getElementById(b.getAttribute('data-copy')).innerText;
+    var done=function(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar';},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){});}
+  });
+});
+
+/* ---------- progreso y nombres (se guarda en esta compu) ---------- */
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+var checks=document.querySelectorAll('input[type=checkbox][data-n]');
+function upd(){
+  var n=0; checks.forEach(function(c){if(c.checked)n++;});
+  document.getElementById('ptxt').textContent=n+' / '+checks.length+' niveles';
+  document.getElementById('pbar').style.width=(n/checks.length*100)+'%';
+}
+checks.forEach(function(c){
+  var v=load('mision-'+c.getAttribute('data-n')); if(v==='1') c.checked=true;
+  c.addEventListener('change',function(){save('mision-'+c.getAttribute('data-n'),c.checked?'1':'0');upd();});
+});
+document.querySelectorAll('input[data-name]').forEach(function(i){
+  var v=load('mision-nombre-'+i.getAttribute('data-name')); if(v) i.value=v;
+  i.addEventListener('input',function(){save('mision-nombre-'+i.getAttribute('data-name'),i.value);});
+});
+upd();
+/* ---------- tu version (segun numero de lista) ---------- */
+function f(x){var s=Number(x.toPrecision(3));return String(s).replace('.',',');}
+var VARS={
+  1:function(i){
+    var b=[[12,3.3],[10,3.3],[10,5],[12,5],[8,3.3],[16,3.3]][i];
+    var lsb=b[1]/(Math.pow(2,b[0])-1)*1000;
+    return {t:'Un ADC de <b>'+b[0]+' bits</b> mide de 0 a <b>'+f(b[1])+' V</b>. ¿Cuántos milivoltios representa <b>un solo escalón</b> (1 LSB)? Mostrá la cuenta.',
+            d:'Clave: '+f(b[1])+' V / (2^'+b[0]+' − 1) ≈ '+f(lsb)+' mV'};
+  },
+  2:function(i){
+    var b=[[1,1.65],[0.8,1.65],[1.2,1.65],[0.5,1.25],[1,1.5],[1.8,1.65]][i];
+    var mn=b[1]-b[0], mx=b[1]+b[0], ok=(mn>=0&&mx<=3.3);
+    return {t:'El módulo entrega una onda que oscila <b>±'+f(b[0])+' V</b> alrededor de un offset de <b>'+f(b[1])+' V</b>. ¿Entre qué tensiones mínima y máxima va a leer el ADC? ¿Entra en el rango de 0 a 3,3 V? Dibujala en tu hoja.',
+            d:'Clave: de '+f(mn)+' V a '+f(mx)+' V. '+(ok?'Entra en el rango.':'NO entra: se pasa del rango y la señal se recorta.')};
+  },
+  3:function(i){
+    var b=[[100,50],[50,25],[30,15],[60,30],[20,10],[80,40]][i];
+    var r=1.65/(b[1]/1000*Math.SQRT2);
+    return {t:'Sensor de corriente tipo pinza de <b>'+b[0]+' A : '+b[1]+' mA</b> (valores eficaces). ADC de 3,3 V con offset de 1,65 V. Calculá la resistencia de carga para que la corriente máxima use todo el rango. Pista: partí del <b>pico</b>, no del valor eficaz.',
+            d:'Clave: R = 1,65 V / ('+b[1]+' mA × √2) ≈ '+f(r)+' Ω'};
+  },
+  4:function(i){
+    var A=[10,20,30,5,40,12][i], k=Math.round(A*Math.SQRT1_2);
+    var m=[0,k,A,k,0,-k,-A,-k], s=0; m.forEach(function(x){s+=x*x;});
+    var r=Math.sqrt(s/m.length);
+    return {t:'Completá la función y probala con la onda del código (8 muestras, pico '+A+'). ¿Cuánto da el valor eficaz? ¿Cuánto esperabas, en teoría, para una senoide de ese pico?',
+            d:'Clave: ≈ '+f(r)+' (teórico '+A+' / √2 ≈ '+f(A*Math.SQRT1_2)+')',
+            code:'def rms(muestras):\n    # 1) elevar cada muestra al cuadrado\n    # 2) promediar los cuadrados\n    # 3) sacar la raíz cuadrada\n    pass\n\nonda = ['+m.join(', ')+']\nprint(rms(onda))'};
+  },
+  5:function(i){
+    var h=[13,11,9,15,7,17][i];
+    return {t:'Querés ver armónicos hasta el <b>'+h+'°</b> de la red de 50 Hz. ¿Cuál es esa frecuencia y cuál es la frecuencia de muestreo mínima teórica que necesitás?',
+            d:'Clave: '+(50*h)+' Hz; muestreo mayor a '+(100*h)+' Hz'};
+  }
+};
+var listaEl=document.getElementById('lista');
+function render(){
+  var n=parseInt(listaEl.value,10), ok=n>=1;
+  document.querySelectorAll('[data-v]').forEach(function(el){
+    var k=el.getAttribute('data-v'), d=document.querySelector('[data-d="'+k+'"]');
+    if(!ok){el.textContent='Ingresá tu número de lista arriba para ver tu versión.'; if(d)d.textContent=''; return;}
+    var v=VARS[k]((n-1)%6); el.innerHTML=v.t; if(d)d.innerHTML=v.d;
+    if(v.code) document.getElementById('rms').textContent=v.code;
+  });
+  if(!ok) document.getElementById('rms').textContent='# Ingresá tu número de lista arriba para ver tu versión';
+  document.getElementById('listaNote').textContent=ok
+    ?'Versión '+(((n-1)%6)+1)+' de 6. Tus números no son los del compañero de al lado.'
+    :'Ingresalo para ver tu versión de las mini-misiones. Cada versión tiene números distintos.';
+}
+var sv=load('mision-lista'); if(sv) listaEl.value=sv;
+listaEl.addEventListener('input',function(){save('mision-lista',listaEl.value);render();});
+if(/[?&]docente=1/.test(location.search)) document.body.classList.add('dm');
+render();
+</script>
+</body>
+</html>
